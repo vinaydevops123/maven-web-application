@@ -1,0 +1,48 @@
+pipeline{
+agent any
+    tools {
+  maven 'maven3.9.4'
+}
+
+
+stages{
+//CheckOutCode
+stage('CheckOutCode'){
+    steps{
+git branch: 'vinay', credentialsId: '63950327-b398-4e8c-9ff8-ee34f3aae2f5', url: 'https://github.com/vinaydevops123/maven-web-application.git'
+}
+}
+
+//build
+stage('Build'){
+steps{
+sh "mvn clean package"
+}
+}
+
+//ExecuteSonarQubeReport
+stage('ExecuteSonarQubeReport'){
+    steps{
+sh "mvn clean  sonar:sonar"
+}
+}
+
+//UploadArtifcatsIntoNexus
+stage('UploadArtifcatsIntoNexus'){
+    steps{
+sh "mvn clean deploy"
+}
+}
+
+//DeployAppIntoTomcatServe
+stage('DeployAppIntoTomcatServer'){
+    steps{
+sshagent(['a0d425b4-743c-4d7e-82bc-b811b078c972']) {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.34.8:/opt/apache-tomcat-9.0.80/webapps/"
+}
+}
+}
+
+
+}//stages closing
+}//pipeline closing
